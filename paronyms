@@ -1,0 +1,78 @@
+#!/usr/bin/perl
+
+use utf8;
+
+my @rep = (
+  ['por', 'pro'],
+  ['pre', 'per'],
+  ['iz', 'íz'],
+  ['cao', 'ção'],
+  ['ç', 'ss'],
+  ['ss', 'ç'],
+  ['c', 'ss'],
+  ['ss', 'c'],
+  ['ch', 'x'],
+  ['x', 'ch'],
+  ['k', 'qu'],
+  ['íti', 'ití'],
+  ['ití', 'íti'],
+  ['issí', 'íssi'],
+  ['ilí', 'íli'],
+  ['íli', 'ilí'],
+  ['ífi', 'ifí'],
+  ['ifí', 'ífi'],
+  ['nume', 'mune'],
+  ['coen', 'quen'],
+
+  ['c', 's'],
+  ['s', 'c'],
+
+  ['z', 's'],
+  ['s', 'z'],
+
+  ['ra', 'ar'],
+  ['ar', 'a'],
+
+  ['(.)ar', '\1ra'],
+  ['(.)ra', '\1a'],
+  ['(.)a' , '\1ar'],
+  ['(.)a' , '\1ra'],
+
+  ['c' , 'ct'],
+  ['ct', 'c'],
+);
+
+my (@list, @paronyms);
+
+my $file = shift;
+die "Usage: $0 LIST" unless $file;
+open(LIST, "<:encoding(UTF-8)", $file)  or die "$0: Can't open $file $!";
+push(@list, $_) while <LIST>;   # Read whole list
+
+# Process whole list
+WORD:
+foreach my $word (@list) {
+  if( $word ~~ @paronyms ){
+    next WORD;
+  }
+
+  REP:
+  foreach my $pair (0 .. @rep-1) {
+    (my $repword = $word) =~ s/$rep[$pair][0]/$rep[$pair][1]/;
+    if ($repword eq $word) {
+      next REP;
+    } else {
+      foreach my $line (@list) {
+        if ($line eq $repword) {
+          push(@paronyms, $word);
+          push(@paronyms, $repword);
+          push(@paronyms, "\n");
+        }
+      }
+    }
+  }
+}
+    open(my $out, ">:encoding(UTF-8)", $file . ".paronyms")
+||  die "can't open UTF-8 encoded filename: $!";
+print $out @paronyms;
+close($out);
